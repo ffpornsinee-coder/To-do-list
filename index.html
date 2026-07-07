@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pink Pastel To-Do List & Dashboard</title>
+    <style>
+        /* ==========================================
+           1. ตั้งค่าโทนสีชมพูพาสเทล (Pink Theme)
+           ========================================== */
+        :root {
+            --bg-color: #fff0f5; /* สีชมพูอ่อนละมุน (Lavender Blush) */
+            --card-bg: #ffffff; 
+            --text-color: #5c3d46; /* สีน้ำตาลอมชมพูเข้ม อ่านง่ายไม่ปวดตา */
+            --text-muted: #8c6e75;
+            --border-color: #ffe1e8; /* สีกรอบชมพูอ่อน */
+            --primary-color: #ffb6c1; /* สีชมพูพาสเทลหลัก */
+            --primary-hover: #ffa4b2;
+            --success-color: #b5e2fa; 
+            --warning-color: #ffcaaf;
+            --danger-color: #ff9aa2;
+            --low-priority: #f0efa6;
+            --medium-priority: #ffcaaf;
+            --high-priority: #ff9aa2;
+        }
+
+        /* โหมดมืดสไตล์ดาร์กพิงค์ (Dark Pink) */
+        [data-theme="dark"] {
+            --bg-color: #2b2022; /* ดำอมชมพูเข้ม */
+            --card-bg: #3a2e31;
+            --text-color: #ffe1e8;
+            --text-muted: #b59fa3;
+            --border-color: #4a3b3e;
+            --primary-color: #ff9aa2;
+            --primary-hover: lightpink;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, 'Prompt';
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.2); 
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        /* ==========================================
+           2. ส่วนประกอบหน้าต่างหน้าเว็บ
+           ========================================== */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 4px 15px rgba(255, 182, 193, 0.1);
+        }
+
+        .theme-btn {
+            padding: 8px 16px;
+            cursor: pointer;
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .theme-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* หน้า Dashboard */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        }
+
+        .card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        /* เลย์เอาต์เนื้อหาหลัก */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1.8fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .main-layout { grid-template-columns: 1fr; }
+        }
+
+        form, .filter-box {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 20px;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            margin-bottom: 20px;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            outline: none;
+        }
+        input:focus, select:focus {
+            border-color: var(--primary-color);
+        }
+
+        button.btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(255, 182, 193, 0.3);
+            transition: 0.2s;
+        }
+        button.btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* รายการการ์ดงาน */
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .task-item {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-left: 8px solid var(--primary-color);
+            padding: 18px;
+            border-radius: 16px;
+            margin-bottom: 12px;
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #5c3d46;
+            margin-bottom: 5px;
+        }
+        .p-low { background-color: var(--low-priority); }
+        .p-medium { background-color: var(--medium-priority); }
+        .p-high { background-color: var(--high-priority); }
+
+        .task-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .task-title { font-weight: bold; font-size: 18px; margin-top: 5px; }
+        .task-details { font-size: 13px; color: var(--text-muted); margin-top: 5px; }
+        
+        .task-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+
+        .btn-small {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .btn-edit { background-color: var(--warning-color); color: #5c3d46; }
+        .btn-delete { background-color: var(--danger-color); color: #5c3d46; }
+
+        .clear-all-btn {
+            background-color: var(--danger-color);
+            color: #5c3d46;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- ส่วนหัวโปรแกรม -->
+    <header>
+        <div>
+            <h1>🌸 My Pink Planner</h1>
+            <p style="color: var(--text-muted);">บันทึกการบ้านและการทำงานโทนสีชมพูพาสเทล</p>
+        </div>
+        <button class="theme-btn" id="themeToggle" onclick="toggleTheme()">โหมดมืด 🌙</button>
+    </header>
+
+    <!-- หน้า Dashboard สรุปงาน -->
+    <div class="dashboard">
+        <div class="card">
+            <h3>งานทั้งหมด</h3>
+            <div class="value" id="dashTotal">0</div>
+        </div>
+        <div class="card" style="border-top: 4px solid var(--warning-color)">
+            <h3>ยังไม่ได้ทำ</h3>
+            <div class="value" id="dashPending">0</div>
+        </div>
+        <div class="card" style="border-top: 4px solid var(--success-color)">
+            <h3>เสร็จเรียบร้อย</h3>
+            <div class="value" id="dashCompleted">0</div>
+        </div>
+        <div class="card" style="border-top: 4px solid var(--danger-color)">
+            <h3>ส่งภายใน 3 วัน 🚨</h3>
+            <div class="value" id="dashUrgent">0</div>
+        </div>
+    </div>
+
+    <!-- โครงสร้างสองฝั่ง -->
+    <div class="main-layout">
+        <!-- ฝั่งซ้าย: ฟอร์มกรอกข้อมูล -->
+        <div>
+            <h2 style="margin-bottom:15px;" id="formTitle">📝 เพิ่มบันทึกการบ้าน</h2>
+            <form id="taskForm" onsubmit="saveTask(event)">
+                <input type="hidden" id="taskId">
+                <div class="form-group">
+                    <label>ชื่องาน / หัวข้อการบ้าน *</label>
+                    <input type="text" id="taskName" required placeholder="เช่น ส่งเรียงความภาษาไทย">
+                </div>
+                <div class="form-group">
+                    <label>รายวิชา *</label>
+                    <input type="text" id="taskSubject" required placeholder="เช่น ภาษาไทย, สังคม, ฟิสิกส์">
+                </div>
+                <div class="form-group">
+                    <label>เดดไลน์กำหนดส่ง *</label>
+                    <input type="date" id="taskDeadline" required>
+                </div>
+                <div class="form-group">
+                    <label>ระดับความสำคัญ</label>
+                    <select id="taskPriority">
+                        <option value="ต่ำ">ต่ำ (ทำเรื่อยๆ)</option>
+                        <option value="ปานกลาง" selected>ปานกลาง (ปานกลาง)</option>
+                        <option value="สูง">สูง (ด่วนมาก! 🔥)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn" id="submitBtn">บันทึกงาน</button>
+                <button type="button" class="btn" id="cancelEditBtn" style="background-color: var(--text-muted); color: white; margin-top: 5px; display: none;" onclick="resetForm()">ยกเลิกการแก้ไข</button>
+            </form>
+        </div>
+
+        <!-- ฝั่งขวา: รายการและการกรองข้อมูล -->
+        <div>
+            <h2 style="margin-bottom:15px;">🔍 ค้นหาและคัดกรอง</h2>
+            <div class="filter-box">
+                <div class="form-group">
+                    <input type="text" id="searchName" placeholder="พิมพ์ชื่องานที่ต้องการค้นหา..." oninput="renderTasks()">
+                </div>
+                <div class="filter-grid">
+                    <select id="filterSubject" onchange="renderTasks()">
+                        <option value="">-- ทุกวิชา --</option>
+                    </select>
+                    <select id="filterStatus" onchange="renderTasks()">
+                        <option value="">-- ทุกสถานะ --</option>
+                        <option value="ยังไม่ทำ">ยังไม่ทำ</option>
+                        <option value="กำลังทำ">กำลังทำ</option>
+                        <option value="เสร็จแล้ว">เสร็จแล้ว</option>
+                    </select>
+                    <select id="filterPriority" onchange="renderTasks()">
+                        <option value="">-- ทุกความสำคัญ --</option>
+                        <option value="ต่ำ">ต่ำ</option>
+                        <option value="ปานกลาง">ปานกลาง</option>
+                        <option value="สูง">สูง</option>
+                    </select>
+                </div>
+            </div>
+
+            <h2 style="margin-bottom:15px;">📋 รายการงานทั้งหมด (เรียงตามวันส่งใกล้สุด)</h2>
+            <button class="clear-all-btn" onclick="clearCompletedTasks()">🧹 ล้างงานที่ทำเสร็จแล้วทั้งหมด</button>
+            
+            <div id="taskList"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     3. ระบบตรรกะ JavaScript (Local Storage)
+     ========================================== -->
+<script>
+    let tasks = [];
+
+    window.onload = function() {
+        const storedTasks = localStorage.getItem('pink_planner_tasks');
+        if (storedTasks) { tasks = JSON.parse(storedTasks); }
+        
+        const savedTheme = localStorage.getItem('pink_planner_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.getElementById('themeToggle').innerText = savedTheme === 'dark' ? 'โหมดสว่าง ☀️' : 'โหมดมืด 🌙';
+
+        updateSubjectFilters();
+        renderTasks();
+    };
+
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        let newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        
+        document.getElementById('themeToggle').innerText = newTheme === 'dark' ? 'โหมดสว่าง ☀️' : 'โหมดมืด 🌙';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('pink_planner_theme', newTheme);
+    }
+
+    function saveTask(event) {
+        event.preventDefault();
+        const id = document.getElementById('taskId').value;
+        const name = document.getElementById('taskName').value.trim();
+        const subject = document.getElementById('taskSubject').value.trim();
+        const deadline = document.getElementById('taskDeadline').value;
+        const priority = document.getElementById('taskPriority').value;
+
+        if (id) {
+            const index = tasks.findIndex(t => t.id === id);
+            if (index !== -1) {
+                tasks[index].name = name;
+                tasks[index].subject = subject;
+                tasks[index].deadline = deadline;
+                tasks[index].priority = priority;
+            }
+        } else {
+            tasks.push({
+                id: Date.now().toString(),
+                name: name,
+                subject: subject,
+                deadline: deadline,
+                priority: priority,
+                status: 'ยังไม่ทำ'
+            });
+        }
+
+        localStorage.setItem('pink_planner_tasks', JSON.stringify(tasks));
+        resetForm();
+        updateSubjectFilters();
+        renderTasks();
+    }
+
+    function editTask(id) {
+        const task = tasks.find(t => t.id === id);
+        if (!task) return;
+
+        document.getElementById('taskId').value = task.id;
+        document.getElementById('taskName').value = task.name;
+        document.getElementById('taskSubject').value = task.subject;
+        document.getElementById('taskDeadline').value = task.deadline;
+        document.getElementById('taskPriority').value = task.priority;
+
+        document.getElementById('formTitle').innerText = '✏️ แก้ไขบันทึกงาน';
+        document.getElementById('submitBtn').innerText = 'อัปเดตข้อมูล';
+        document.getElementById('cancelEditBtn').style.display = 'block';
+    }
+
+    function resetForm() {
+        document.getElementById('taskId').value = '';
+        document.getElementById('taskForm').reset();
+        document.getElementById('formTitle').innerText = '📝 เพิ่มบันทึกการบ้าน';
+        document.getElementById('submitBtn').innerText = 'บันทึกงาน';
+        document.getElementById('cancelEditBtn').style.display = 'none';
+    }
+
+    function deleteTask(id) {
+        if (confirm('ต้องการลบงานนี้ใช่ไหมครับ?')) {
+            tasks = tasks.filter(t => t.id !== id);
+            localStorage.setItem('pink_planner_tasks', JSON.stringify(tasks));
+            updateSubjectFilters();
+            renderTasks();
+        }
+    }
+
+    function updateStatus(id, newStatus) {
+        const index = tasks.findIndex(t => t.id === id);
+        if (index !== -1) {
+            tasks[index].status = newStatus;
+            localStorage.setItem('pink_planner_tasks', JSON.stringify(tasks));
+            renderTasks();
+        }
+    }
+
+    function clearCompletedTasks() {
+        const count = tasks.filter(t => t.status === 'เสร็จแล้ว').length;
+        if (count === 0) return alert('ยังไม่มีงานที่ทำเสร็จเลยครับ!');
+        if (confirm(`คุณต้องการลบงานที่ทำเสร็จแล้วทั้งหมด ${count} งานใช่ไหม?`)) {
+            tasks = tasks.filter(t => t.status !== 'เสร็จแล้ว');
+            localStorage.setItem('pink_planner_tasks', JSON.stringify(tasks));
+            updateSubjectFilters();
+            renderTasks();
+        }
+    }
+
+    function updateSubjectFilters() {
+        const select = document.getElementById('filterSubject');
+        const saved = select.value;
+        const subjects = [...new Set(tasks.map(t => t.subject))];
+        select.innerHTML = '<option value="">-- ทุกวิชา --</option>';
+        subjects.forEach(sub => {
+            const opt = document.createElement('option');
+            opt.value = sub; opt.innerText = sub;
+            select.appendChild(opt);
+        });
+        select.value = saved;
+    }
+
+    function renderTasks() {
+        const listDiv = document.getElementById('taskList');
+        const search = document.getElementById('searchName').value.toLowerCase();
+        const fSub = document.getElementById('filterSubject').value;
+        const fStat = document.getElementById('filterStatus').value;
+        const fPri = document.getElementById('filterPriority').value;
+
+        let result = [...tasks].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+
+        result = result.filter(t => {
+            return t.name.toLowerCase().includes(search) &&
+                   (fSub === '' || t.subject === fSub) &&
+                   (fStat === '' || t.status === fStat) &&
+                   (fPri === '' || t.priority === fPri);
+        });
+
+        listDiv.innerHTML = '';
+        if (result.length === 0) {
+            listDiv.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding:20px;">ไม่มีงานค้างเลย เก่งมากครับ! ✨</p>';
+        } else {
+            result.forEach(t => {
+                let pClass = t.priority === 'สูง' ? 'p-high' : (t.priority === 'ปานกลาง' ? 'p-medium' : 'p-low');
+                const dateFormated = new Date(t.deadline).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+
+                const item = document.createElement('div');
+                item.className = 'task-item';
+                if (t.status === 'เสร็จแล้ว') item.style.opacity = '0.5';
+
+                item.innerHTML = `
+                    <div class="task-header">
+                        <div>
+                            <span class="priority-badge ${pClass}">ความสำคัญ: ${t.priority}</span>
+                            <div class="task-title" style="${t.status === 'เสร็จแล้ว' ? 'text-decoration: line-through;' : ''}">${t.name}</div>
+                        </div>
+                        <div>
+                            <select style="width:auto; padding:6px; border-radius:6px;" onchange="updateStatus('${t.id}', this.value)">
+                                <option value="ยังไม่ทำ" ${t.status === 'ยังไม่ทำ' ? 'selected' : ''}>ยังไม่ทำ</option>
+                                <option value="กำลังทำ" ${t.status === 'กำลังทำ' ? 'selected' : ''}>กำลังทำ</option>
+                                <option value="เสร็จแล้ว" ${t.status === 'เสร็จแล้ว' ? 'selected' : ''}>เสร็จแล้ว</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="task-details">📚 วิชา: ${t.subject} | 📅 กำหนดส่ง: ${dateFormated}</div>
+                    <div class="task-actions">
+                        <button class="btn-small btn-edit" onclick="editTask('${t.id}')">แก้ไข</button>
+                        <button class="btn-small btn-delete" onclick="deleteTask('${t.id}')">ลบ</button>
+                    </div>
+                `;
+                listDiv.appendChild(item);
+            });
+        }
+        calculateDashboard();
+    }
+
+    function calculateDashboard() {
+        const total = tasks.length;
+        const completed = tasks.filter(t => t.status === 'เสร็จแล้ว').length;
+        const pending = total - completed;
+
+        const today = new Date(); today.setHours(0,0,0,0);
+        const limitDay = new Date(today); limitDay.setDate(today.getDate() + 3);
+
+        const urgent = tasks.filter(t => {
+            if (t.status === 'เสร็จแล้ว') return false;
+            const d = new Date(t.deadline);
+            return d >= today && d <= limitDay;
+        }).length;
+
+        document.getElementById('dashTotal').innerText = total;
+        document.getElementById('dashPending').innerText = pending;
+        document.getElementById('dashCompleted').innerText = completed;
+        document.getElementById('dashUrgent').innerText = urgent;
+    }
+</script>
+</body>
+</html>
